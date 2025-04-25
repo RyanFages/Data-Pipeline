@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mlflow_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - flask-networks
+
+  mlflow-server:
+    image: mlflow_server
+    build:
+      context: ./mlflow-server
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow-server:5000
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    networks:
+      - flask-networks
+
+
+  web-app:
+    image: web_app_flask
+    build:
+      context: ./web-app
+    environment:
+      FLASK_APP: app.py
+      FLASK_ENV: development
+    ports:
+      - "5001:5000"
+    depends_on:
+      - mlflow-server
+      - db
+    networks:
+      - flask-networks
+
+networks:
+  flask-networks:
+    driver: bridge
+
+volumes:
+  postgres_data:

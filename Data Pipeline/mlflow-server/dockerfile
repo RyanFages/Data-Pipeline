@@ -1,0 +1,10 @@
+FROM python
+
+WORKDIR /app
+
+# Install required libraries
+RUN pip install mlflow
+
+COPY train.py /app/
+
+CMD ["mlflow", "ui", "--host", "0.0.0.0"]
