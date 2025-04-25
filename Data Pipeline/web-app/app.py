@@ -1,19 +1,14 @@
 from flask import Flask, request, render_template
-from sklearn.datasets import load_iris
-from sklearn.ensemble import RandomForestClassifier
+import mlflow.pyfunc
 import numpy as np
 
 app = Flask(__name__)
 
-# Load the iris dataset and train the model
-iris = load_iris()
-X, y = iris.data, iris.target
+mlflow.set_tracking_uri("http://mlflow-server:5000")
 
-# We'll just use sepal width (index 1) for prediction
-X_single_feature = X[:, [1]]
-
-model = RandomForestClassifier()
-model.fit(X_single_feature, y)
+# Load model from MLflow
+# Replace this with your actual model URI
+model = mlflow.pyfunc.load_model("models:/Iris_Model/1")
 
 @app.route("/")
 def index():
@@ -22,5 +17,14 @@ def index():
 @app.route("/predict", methods=["POST"])
 def predict():
     sepal_width = float(request.form["sepal_width"])
-    prediction = model.predict(np.array([[sepal_width]]))[0]
+
+    # Create input for MLflow model (expects DataFrame-like structure)
+    input_data = np.array([[sepal_width]])
+    
+    # If your MLflow model expects a DataFrame with column names:
+    import pandas as pd
+    input_df = pd.DataFrame(input_data, columns=["sepal_width"])
+
+    prediction = model.predict(input_df)[0]
+
     return render_template("index.html", prediction=prediction)

@@ -17,14 +17,15 @@ services:
     build:
       context: ./mlflow-server
     environment:
-      MLFLOW_TRACKING_URI: http://mlflow-server:5000
+      - BACKEND_STORE_URI=postgresql://admin:password@db/mlflow
+      - ARTIFACT_ROOT=/mlflow-artifacts
     ports:
       - "5000:5000"
     depends_on:
       - db
     networks:
       - flask-networks
-
+    command: mlflow server --backend-store-uri ${BACKEND_STORE_URI} --default-artifact-root ${ARTIFACT_ROOT} --host 0.0.0.0
 
   web-app:
     image: web_app_flask
@@ -47,3 +48,4 @@ networks:
 
 volumes:
   postgres_data:
+  mlflow_artifact:
